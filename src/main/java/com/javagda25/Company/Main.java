@@ -451,34 +451,35 @@ public class Main {
 //        System.out.println(companies);
 
         System.out.println("\n----------------- 1 ----------------- Wylistuj wszystkie firmy. \n");
-        wylistujWszystkieFirmy(companies);
+        exercise1(companies);
         System.out.println("\n----------------- 2 ----------------- Wylistuj wszystkie firmy które są z Detroit. \n");
-        wylistujWszystkieFirmyDetroit(companies);
+        exercise2(companies);
         System.out.println("\n----------------- 3 ----------------- Wylistuj wszystkie firmy z Londynu, posortuj je po" +
                 " ilości pracowników (rosnąco). \n");
-        wylistujWszystkieFirmyZLondynuPosortuj(companies);
+        exercise3(companies);
         System.out.println("\n----------------- 4 ----------------- Wylistuj wszystkie firmy z Warszawy. Posortuj je po" +
                 " ilości zakupów (rosnąco) i ilości pracowników (malejąco). \n");
-        wylistujFirmyZGdanskaPosortuj(companies);
+        exercise4(companies);
         System.out.println("\n----------------- 5 ----------------- Zwróć firmę z największą ilością pracowników, która" +
                 " pochodzi z Kijowa. \n");
-        firmaZKijowaNajwiecejPracownikow(companies);
+        exercise5(companies);
+        System.out.println("\n----------------- 6 ----------------- Zwróć firmę z najkrótszą nazwą \n");
         System.out.println("\n----------------- x ----------------- xxx \n");
     }
 
 
-    public static void wylistujWszystkieFirmy(List<Company> companies) {
+    public static void exercise1(List<Company> companies) {
         companies.stream()
                 .forEach(wyswietl -> System.out.println(wyswietl));
     }
 
-    public static void wylistujWszystkieFirmyDetroit(List<Company> companies) {
+    public static void exercise2(List<Company> companies) {
         companies.stream()
                 .filter(p -> p.getCityHeadquarters().equals("Detroit"))
                 .forEach(wyswietl -> System.out.println(wyswietl));
     }
 
-    public static void wylistujWszystkieFirmyZLondynuPosortuj(List<Company> companies) {
+    public static void exercise3(List<Company> companies) {
         List<Company> listaFirm = companies.stream()
                 .filter(p -> p.getCityHeadquarters().equals("London"))
                 .sorted(Comparator.comparingInt(Company::getEmployees))
@@ -486,7 +487,7 @@ public class Main {
         listaFirm.forEach(System.out::println);
     }
 
-    public static void wylistujFirmyZGdanskaPosortuj(List<Company> companies) {
+    public static void exercise4(List<Company> companies) {
         List<Company> listaFirmGdansk = companies.stream()
                 .filter(p -> p.getCityHeadquarters().equals("Gdansk"))
                 .sorted(Comparator.comparingInt(o -> o.getPurchaseList().size()))
@@ -496,7 +497,7 @@ public class Main {
         listaFirmGdansk.forEach(System.out::println);
     }
 
-    public static Company firmaZKijowaNajwiecejPracownikow(List<Company> companies) {
+    public static Company exercise5(List<Company> companies) {
         List<Company> listaWszystkichFirm = companies.stream()
                 .filter(p -> p.getCityHeadquarters().equals("Kijev"))
                 .collect(Collectors.toList());
@@ -513,5 +514,9 @@ public class Main {
         }
         return listaWszystkichFirm2.get();
     }
+
+//    public static Company exercise6(List<Company> companies){
+//
+//    }
 
 }
