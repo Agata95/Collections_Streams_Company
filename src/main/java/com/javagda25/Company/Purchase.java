@@ -12,4 +12,5 @@ public class Purchase {
     private LocalDate purchaseDate; // data dokonania zakupu
     private double quantity;        // zakupiona ilość produktu
     private UNIT unit;              // jednostka zakupu (np. w gramach)
+
 }

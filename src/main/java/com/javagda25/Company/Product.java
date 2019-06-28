@@ -12,6 +12,7 @@ public class Product {
     private String name;    // nazwa produktu
     private double price;   // cena produktu
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
