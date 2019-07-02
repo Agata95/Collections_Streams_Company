@@ -464,6 +464,7 @@ public class Main {
                 " pochodzi z Kijowa. \n");
         exercise5(companies);
         System.out.println("\n----------------- 6 ----------------- Zwróć firmę z najkrótszą nazwą \n");
+        exercise6(companies);
         System.out.println("\n----------------- 7 ----------------- Zwróć firmę która nie pochodzi z Kijowa, Londynu i" +
                 " Detroit, która ma najmniej kupionych produktów. \n");
         exercise7(companies);
@@ -518,15 +519,20 @@ public class Main {
         return listaWszystkichFirm2.get();
     }
 
-//    public static Company exercise6(List<Company> companies) {
-//        List<Company> listaWszystkichFirm = new ArrayList<>(companies);
-//        for (Company p : listaWszystkichFirm) {
-//            String[] a = p.getName().split("");
-//            int b = a.length;
-//        }
-//        Optional<Company> lista = listaWszystkichFirm.stream()
-//                .map(p->p.getName());
-//    }
+    public static List<Company> exercise6(List<Company> companies) {
+        List<Company> minNameList = new ArrayList<>();
+        OptionalInt minName=companies.stream()
+                .mapToInt(c -> c.getName().length()).min();
+        if (minName.isPresent()){
+            Optional<Company> optionalCompany = companies.stream()
+                    .filter(c -> c.getName().length() == minName.getAsInt()).findAny();
+            minNameList.add(optionalCompany.get());
+            return minNameList;
+        } else {
+            return null;
+        }
+    }
+
 
     public static Company exercise7(List<Company> companies){
         List<Company> listaWszytskichFirm = companies.stream()
