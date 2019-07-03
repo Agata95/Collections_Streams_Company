@@ -475,15 +475,50 @@ public class Main {
                 "wartością ilość pracowników w tej firmie. \n");
         exercise9(companies);
         System.out.println("\n----------------- 10 ----------------- Zwróć Mapę w której kluczem jest miejscowość a " +
-                "wartością jest LISTA FIRM z tamtej miejscowości (Map<String, List<Company>) \n");
+                "wartością jest LISTA FIRM z tamtej miejscowości (Map<String, List<Company>). \n");
         exercise10(companies);
         System.out.println("\n----------------- 11 ----------------- Zwróć firmę która dokonała zakupów na" +
-                " największą kwotę \n");
+                " największą kwotę. \n");
         exercise11(companies);
         System.out.println("\n----------------- 12 ----------------- Zwróć firmę która kupiła najwięcej produktów " +
-                "za kwotę wyższą niż 10 k \n");
+                "za kwotę wyższą niż 10 k. \n");
         exercise12(companies);
+        System.out.println("\n----------------- 13 ----------------- Zwróć miejscowość która wydała najwięcej pieniędzy." +
+                " Stwórz mapę Map<String, Double> gdzie kluczem jest miejscowość,\n" +
+                " a wartością jest kwota wydana przez firmy pochodzące z tamtej miejscowości. \n");
+        exercise13(companies);
+        System.out.println("\n----------------- 14 ----------------- Wypisz firmy które 15 stycznia 2018 " +
+                "kupiły \"Network Switch\". \n");
+        exercise14(companies);
+        System.out.println("\n----------------- 15 ----------------- Znajdź firmę która kupuje najwięcej kawy. \n");
+        exercise15(companies);
         System.out.println("\n----------------- x ----------------- xxx \n");
+    }
+
+    private static void exercise15(List<Company> companies) {
+
+    }
+
+    private static void exercise14(List<Company> companies) {
+        companies.stream()
+                .filter(p -> p.getPurchaseList().stream()
+                        .anyMatch(c -> c.getPurchaseDate().isEqual(LocalDate.of(2018, 1, 15)) &&
+                                c.getProduct().getName().equalsIgnoreCase("network switch")))
+                .forEach(c -> System.out.println(c.getName() + " " + c.getCityHeadquarters()));
+    }
+
+    private static void exercise13(List<Company> companies) {
+        Set<String> company = companies.stream()
+                .map(p -> p.getCityHeadquarters()).collect(Collectors.toSet());
+
+        Map<String, Double> minMoney = company.stream().collect(Collectors.toMap(
+                m -> m,
+                m -> companies.stream()
+                        .filter(p -> p.getCityHeadquarters().equals(m))
+                        .mapToDouble(c -> c.getPurchaseList().stream()
+                                .mapToDouble(d -> d.getProduct().getPrice() * d.getQuantity()).sum()).sum()));
+
+        System.out.println(minMoney);
     }
 
     private static void exercise12(List<Company> companies) {
