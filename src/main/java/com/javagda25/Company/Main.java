@@ -515,13 +515,63 @@ public class Main {
         exercise25(companies);
         System.out.println("\n----------------- 26 ----------------- Zwróć Mapę (Map<Company, Integer>). W mapie umieść" +
                 " wpisy Firma - > ilość biur które wynajęły w dowolnym okresie. \n");
-        System.out.println("Dokończyć -- u Pawła w repo");
         exercise26(companies);
         System.out.println("\n----------------- 27 ----------------- Wypisz \"Nazwa firmy: XYZ, ilość zakupionych " +
                 "telefonów apple: X\" dla każdej firmy która kupiła telefon apple. Wypisy\n" +
                 " powinny być posortowane (na szczycie powinna być firma która kupiła ich najwięcej). \n");
         exercise27(companies);
+        System.out.println("\n----------------- 28 ----------------- Znajdź firme która posiada siedzibę w więcej niż " +
+                "jednym mieście. Posortuj firmy po ilości siedzib, wypisz tylko te\n" +
+                "które mają więcej niż 1 siedzibę. \n");
+        exercise28(companies);
+        System.out.println("\n----------------- 29 ----------------- Wypisz ilość kilogramów cukru zużywaną " +
+                "przez \"Detroit Bakery\". \n");
+        exercise29(companies);
+        System.out.println("\n----------------- 30 ----------------- Wypisz wszystkie zakupy firmy \"Solwit\". \n");
+        exercise30(companies);
         System.out.println("\n----------------- x ----------------- xxx \n");
+    }
+
+    private static void exercise30(List<Company> companies) {
+        companies
+                .stream()
+                .filter(c -> c.getName().equalsIgnoreCase("solwit"))
+                .flatMap(c -> c.getPurchaseList().stream())
+                .forEach(System.out::println);
+    }
+
+    private static void exercise29(List<Company> companies) {
+        double sum = companies
+                .stream()
+                .filter(c -> c.getName().equalsIgnoreCase("Detroit Bakery"))
+                .mapToDouble(c -> c.getPurchaseList()
+                        .stream()
+                        .filter(p -> p.getProduct().getName().equalsIgnoreCase("sugar"))
+                        .mapToDouble(Purchase::getQuantity)
+                        .sum())
+                .sum();
+
+        System.out.println("Sum of sugar used by Detroit Bakery equals: " + sum);
+    }
+
+    private static void exercise28(List<Company> companies) {
+        // groupingBy gdy kluczy jest więcej
+        // Collectors.mapping - zgrupowanie np. miast na listę
+        Map<String, List<String>> companyIntegerMap = companies
+                .stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getName(),
+                        Collectors.mapping(c -> c.getCityHeadquarters(), Collectors.toList())))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.comparingDouble(value -> value.size())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (o1, o2) -> o1, LinkedHashMap::new));
+
+        companyIntegerMap
+                .entrySet()
+                .stream()
+                .filter(s -> s.getValue().size() > 1)
+                .forEach(s -> System.out.println("Firma " + s.getKey() + " " + s.getValue().size()));
     }
 
     private static void exercise27(List<Company> companies) {
@@ -541,7 +591,8 @@ public class Main {
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (o1, o2) -> o1, LinkedHashMap::new));
 
-        sortedByApple.entrySet().forEach(c -> System.out.println(c.getKey().getName() + " " + c.getValue()));
+        sortedByApple.entrySet().forEach(c -> System.out.println("Nazwa firmy: " + c.getKey().getName() + ", ilość zakupionych " +
+                "telefonów apple:  " + c.getValue()));
     }
 
     private static void exercise26(List<Company> companies) {
@@ -554,16 +605,27 @@ public class Main {
                                 .mapToInt(purchase -> (int) purchase.getQuantity())
                                 .sum()));
 
-//        Map<String, Integer>  campsName = companies.stream()
-//                .collect(Collectors.toMap(
-//                        company->company.getName(),
-//                        company -> company.getPurchaseList()
-//                                .stream()
-//                                .filter(purchase -> purchase.getProduct().getName().equalsIgnoreCase("Office rent")
-//                                        .mapToInt(purchase -> (int) purchase.getQuantity())
-//                                        .sum(), (o,o2)->)
-//                                ))
-        comps.forEach((company, quantity) -> System.out.println(company.getName() + " biur: " + quantity));
+        // żeby wykorzystać binaryoperator (merger)
+        // zmieniliśmy trochę stream.
+        // kluczem jest nazwa firmy (która jest nieunikalna!) więc pod ten sam klucz trafi kilka wartości
+        // to, czego dokonujemy w ostatniej linii:
+        //        (o, o2) -> o + o2));
+        // to kryterium "co zrobić z wartościami jeśli pod tym samym kluczem będzie więcej niż tylko jedna wartość
+        // nasze kryterium dokonuje sumowania - ponieważ chcę dowiedzieć się ile firma Intel wynajęła w sumie biur.
+        Map<String, Integer> compsNames = companies.stream()
+                .collect(Collectors.toMap(
+                        company -> company.getName(),
+                        company -> company.getPurchaseList()
+                                .stream()
+                                // filtr nazwy produktu
+                                .filter(purchase -> purchase.getProduct().getName().equalsIgnoreCase("Office rent"))
+                                // każdy purchase jest zamieniany na ilość wykupionych produktów (odfiltrowanych)
+                                .mapToInt(purchase -> (int) purchase.getQuantity())
+                                .sum(),
+                        (o, o2) -> o + o2));
+
+//        comps.forEach((company, iloscBiurWDowolnymOkresie) -> System.out.println(company.getName() + " biur: " + iloscBiurWDowolnymOkresie));
+        compsNames.forEach((companyName, iloscBiurWDowolnymOkresie) -> System.out.println(companyName + " biur: " + iloscBiurWDowolnymOkresie));
     }
 
     private static void exercise25(List<Company> companies) {
@@ -629,9 +691,24 @@ public class Main {
     }
 
     private static void exercise21(List<Company> companies) {
-//        Optional<Company> oc = companies
-//                .stream()
-//                .max(Comparator.comparingDouble())
+        Optional<Company> oc = companies
+                .stream()
+                .max(Comparator.comparingDouble(
+                        c -> c.getPurchaseList()
+                                .stream()
+                                .filter(purchase ->
+                                        purchase.getProduct().getName().equalsIgnoreCase("pen") ||
+                                                purchase.getProduct().getName().equalsIgnoreCase("pencil") ||
+                                                purchase.getProduct().getName().equalsIgnoreCase("paper") ||
+                                                purchase.getProduct().getName().equalsIgnoreCase("clip") ||
+                                                purchase.getProduct().getName().equalsIgnoreCase("scisors") ||
+                                                purchase.getProduct().getName().equalsIgnoreCase("puncher"))
+                                .mapToDouble(value -> value.getQuantity() * value.getProduct().getPrice())
+                                .sum()));
+        if (oc.isPresent()) {
+            Company c = oc.get();
+            System.out.println(c.getName());
+        }
     }
 
     private static void exercise20(List<Company> companies) {
