@@ -492,7 +492,171 @@ public class Main {
         exercise14(companies);
         System.out.println("\n----------------- 15 ----------------- Znajdź firmę która kupuje najwięcej kawy. \n");
         exercise15(companies);
+        System.out.println("\n----------------- 19 ----------------- Zwróć firmę która w styczniu kupiła najwięcej " +
+                "paliwa (ropy) \n");
+        exercise19(companies);
+        System.out.println("\n----------------- 20 ----------------- Zwróć firmę której proporcja wydanych pieniędzy" +
+                " do ilości pracowników jest najwyższa \n");
+        exercise20(companies);
+        System.out.println("\n----------------- 21 ----------------- Zwróć firmę która najwięcej wydaje na artykuły" +
+                " biurowe \n");
+        exercise21(companies);
+        System.out.println("\n----------------- 22 ----------------- Zwróć firmy posortowane po ilości wydanych" +
+                " pieniędzy na paliwo. \n");
+        exercise22(companies);
+        System.out.println("\n----------------- 23 ----------------- Zwróć wszystkie produkty które kupione były na" +
+                " kilogramy. \n");
+        exercise23(companies);
+        System.out.println("\n----------------- 24 ----------------- Zwróć listę zakupów (obiektów purchase) kupionych " +
+                "przez firmy z Detroit w miesiącu lutym. Posortuj je po kwocie. \n");
+        exercise24(companies);
+        System.out.println("\n----------------- 25 ----------------- Zwróć ilość biur które wynajęte były w " +
+                "miesiącu lutym. \n");
+        exercise25(companies);
+        System.out.println("\n----------------- 26 ----------------- Zwróć Mapę (Map<Company, Integer>). W mapie umieść" +
+                " wpisy Firma - > ilość biur które wynajęły w dowolnym okresie. \n");
+        System.out.println("Dokończyć -- u Pawła w repo");
+        exercise26(companies);
+        System.out.println("\n----------------- 27 ----------------- Wypisz \"Nazwa firmy: XYZ, ilość zakupionych " +
+                "telefonów apple: X\" dla każdej firmy która kupiła telefon apple. Wypisy\n" +
+                " powinny być posortowane (na szczycie powinna być firma która kupiła ich najwięcej). \n");
+        exercise27(companies);
         System.out.println("\n----------------- x ----------------- xxx \n");
+    }
+
+    private static void exercise27(List<Company> companies) {
+        Map<Company, Double> sortedByApple = companies.stream()
+                .filter(c -> c.getPurchaseList()
+                        .stream()
+                        .anyMatch(p -> p.getProduct().getName().equalsIgnoreCase("Apple Phone")))
+                .collect(Collectors.toMap(
+                        c -> c,
+                        c -> c.getPurchaseList()
+                                .stream()
+                                .filter(p -> p.getProduct().getName().equalsIgnoreCase("Apple Phone"))
+                                .mapToDouble(p -> p.getQuantity())
+                                .sum()))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (o1, o2) -> o1, LinkedHashMap::new));
+
+        sortedByApple.entrySet().forEach(c -> System.out.println(c.getKey().getName() + " " + c.getValue()));
+    }
+
+    private static void exercise26(List<Company> companies) {
+        Map<Company, Integer> comps = companies.stream()
+                .collect(Collectors.toMap(
+                        company -> company,
+                        company -> company.getPurchaseList()
+                                .stream()
+                                .filter(purchase -> purchase.getProduct().getName().equalsIgnoreCase("Office rent"))
+                                .mapToInt(purchase -> (int) purchase.getQuantity())
+                                .sum()));
+
+//        Map<String, Integer>  campsName = companies.stream()
+//                .collect(Collectors.toMap(
+//                        company->company.getName(),
+//                        company -> company.getPurchaseList()
+//                                .stream()
+//                                .filter(purchase -> purchase.getProduct().getName().equalsIgnoreCase("Office rent")
+//                                        .mapToInt(purchase -> (int) purchase.getQuantity())
+//                                        .sum(), (o,o2)->)
+//                                ))
+        comps.forEach((company, quantity) -> System.out.println(company.getName() + " biur: " + quantity));
+    }
+
+    private static void exercise25(List<Company> companies) {
+        Double result = companies.stream()
+                .mapToDouble(company -> company.getPurchaseList()
+                        .stream()
+                        // filtry miesiac i nazwa produktu
+                        .filter(purchase -> purchase.getPurchaseDate().getMonthValue() == 2)
+                        .filter(purchase -> purchase.getProduct().getName().equalsIgnoreCase("Office rent"))
+                        // każdy purchase jest zamieniany na ilość wykupionych produktów (odfiltrowanych)
+                        .mapToDouble(purchase -> purchase.getQuantity())
+                        // sumowanie ilości
+                        // wynik (suma) poniżej to ilość wynajętych przez każdą kolejną firmę
+                        .sum())
+                .sum();
+
+
+        System.out.println("Wynik: " + result);
+    }
+
+    private static void exercise24(List<Company> companies) {
+        List<Purchase> products = companies
+                .stream()
+                .filter(company -> company.getCityHeadquarters().equalsIgnoreCase("detroit"))
+                .flatMap(c -> c.getPurchaseList()
+                        .stream()
+                        .filter(purchase -> purchase.getPurchaseDate().getMonthValue() == 2))
+                .sorted(Comparator
+                        // sortujemy po wartości - price * quantity
+                        .comparingDouble(
+                                pur -> pur.getProduct().getPrice() * pur.getQuantity()))
+                .collect(Collectors.toList());
+
+        products.forEach(p -> System.out.println(p.getProduct().getName() + " na kwotę " + p.getQuantity()));
+    }
+
+    private static void exercise23(List<Company> companies) {
+        Set<Product> products = companies.stream()
+                .map(co -> co.getPurchaseList()
+                        .stream()
+                        .filter(purchase -> purchase.getUnit() == UNIT.KILOGRAM)
+                        .map(purchase -> purchase.getProduct()).collect(Collectors.toSet()))
+                .flatMap(productList -> productList.stream())
+                .collect(Collectors.toSet());
+
+        products.forEach(product -> System.out.println(product.getName()));
+    }
+
+    private static void exercise22(List<Company> companies) {
+        Map<Company, Double> moneyForNothing = companies.stream().collect(Collectors.toMap(
+                co -> co,
+                co -> co.getPurchaseList()
+                        .stream()
+                        .filter(p -> p.getProduct().getName().startsWith("Fuel"))
+                        .mapToDouble(p -> p.getQuantity() * p.getProduct().getPrice()).sum()))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
+
+        moneyForNothing.entrySet().forEach(companyDoubleEntry -> System.out.println(companyDoubleEntry.getKey().getName()
+                + " " + companyDoubleEntry.getValue()));
+    }
+
+    private static void exercise21(List<Company> companies) {
+//        Optional<Company> oc = companies
+//                .stream()
+//                .max(Comparator.comparingDouble())
+    }
+
+    private static void exercise20(List<Company> companies) {
+        Optional<Company> company = companies.stream()
+                .max(Comparator.comparingDouble(p -> p.getPurchaseList()
+                        .stream()
+                        .mapToDouble(purchase -> purchase.getQuantity() * purchase.getProduct().getPrice())
+                        .sum() / p.getEmployees()));
+
+        System.out.println(company);
+    }
+
+    private static Optional<Company> exercise19(List<Company> companies) {
+        Optional<Company> oc = companies.stream()
+                .max(Comparator.comparingDouble(
+                        c -> c.getPurchaseList()
+                                .stream()
+                                .filter(p -> p.getProduct().getName().equalsIgnoreCase("Fuel, oil"))
+                                .filter(purchase -> purchase.getPurchaseDate().getMonthValue() == 1).mapToDouble(
+                                        p -> p.getQuantity()).sum()));
+        if (oc.isPresent()) {
+            return oc;
+        } else {
+            return null;
+        }
     }
 
     private static void exercise15(List<Company> companies) {
