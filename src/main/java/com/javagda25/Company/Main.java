@@ -468,83 +468,159 @@ public class Main {
         System.out.println("\n----------------- 7 ----------------- Zwróć firmę która nie pochodzi z Kijowa, Londynu i" +
                 " Detroit, która ma najmniej kupionych produktów. \n");
         exercise7(companies);
+        System.out.println("\n----------------- 8 ----------------- Każdej firmie dodaj po 1 pracowniku, jeśli pochodzi" +
+                " z Kijowa lub Detroit. \n");
+        exercise8(companies);
+        System.out.println("\n----------------- 9 ----------------- Zwróć MAPĘ w której kluczem jest nazwa firmy, a " +
+                "wartością ilość pracowników w tej firmie. \n");
+        exercise9(companies);
+        System.out.println("\n----------------- 10 ----------------- Zwróć Mapę w której kluczem jest miejscowość a " +
+                "wartością jest LISTA FIRM z tamtej miejscowości (Map<String, List<Company>) \n");
+        exercise10(companies);
+        System.out.println("\n----------------- 11 ----------------- Zwróć firmę która dokonała zakupów na" +
+                " największą kwotę \n");
+        exercise11(companies);
+        System.out.println("\n----------------- 12 ----------------- Zwróć firmę która kupiła najwięcej produktów " +
+                "za kwotę wyższą niż 10 k \n");
+        exercise12(companies);
         System.out.println("\n----------------- x ----------------- xxx \n");
     }
 
-
-    public static void exercise1(List<Company> companies) {
-        companies.stream()
-                .forEach(wyswietl -> System.out.println(wyswietl));
+    private static void exercise12(List<Company> companies) {
+        Optional<Company> company = companies.stream()
+                .max(Comparator.comparingDouble(
+                        p -> p.getPurchaseList().stream()
+                                .filter(c -> c.getProduct().getPrice() > 10000)
+                                .mapToDouble(Purchase::getQuantity).sum()));
+        System.out.println(company);
     }
 
-    public static void exercise2(List<Company> companies) {
-        companies.stream()
-                .filter(p -> p.getCityHeadquarters().equals("Detroit"))
-                .forEach(wyswietl -> System.out.println(wyswietl));
+    private static void exercise11(List<Company> companies) {
+        Optional<Company> company = companies.stream()
+                .max(Comparator.comparingDouble(
+                        p -> p.getPurchaseList().stream()
+                                .mapToDouble(c -> c.getProduct().getPrice() * c.getQuantity()).sum()));
+        System.out.println(company);
     }
 
-    public static void exercise3(List<Company> companies) {
-        List<Company> listaFirm = companies.stream()
-                .filter(p -> p.getCityHeadquarters().equals("London"))
-                .sorted(Comparator.comparingInt(Company::getEmployees))
-                .collect(Collectors.toList());
-        listaFirm.forEach(System.out::println);
-    }
+    private static void exercise10(List<Company> companies) {
+        Set<String> city = companies.stream()
+                .map(Company::getCityHeadquarters).collect(Collectors.toSet());
 
-    public static void exercise4(List<Company> companies) {
-        List<Company> listaFirmGdansk = companies.stream()
-                .filter(p -> p.getCityHeadquarters().equals("Gdansk"))
-                .sorted(Comparator.comparingInt(o -> o.getPurchaseList().size()))
-                .sorted(Comparator.comparingInt(Company::getEmployees)
-                        .reversed())
-                .collect(Collectors.toList());
-        listaFirmGdansk.forEach(System.out::println);
-    }
+        Map<String, List<Company>> mapOfCompany = city.stream().collect(Collectors.toMap(
+                m -> m,
+                m -> companies.stream()
+                        .filter(p -> p.getCityHeadquarters().equals(m))
+                        .collect(Collectors.toList())));
 
-    public static Company exercise5(List<Company> companies) {
-        List<Company> listaWszystkichFirm = companies.stream()
-                .filter(p -> p.getCityHeadquarters().equals("Kijev"))
-                .collect(Collectors.toList());
-
-        OptionalInt najwiecejPracownikow = listaWszystkichFirm.stream()
-                .mapToInt(p -> p.getEmployees()).max();
-
-        Optional<Company> listaWszystkichFirm2 = listaWszystkichFirm.stream()
-                .filter(p -> p.getEmployees() == najwiecejPracownikow.getAsInt())
-                .findFirst();
-
-        if (najwiecejPracownikow.isPresent()) {
-            System.out.println(listaWszystkichFirm2.get());
+        for (Map.Entry<String, List<Company>> s : mapOfCompany.entrySet()) {
+            System.out.println(s.getKey() + ": " + s.getValue());
         }
-        return listaWszystkichFirm2.get();
+
+    }
+
+    private static void exercise9(List<Company> companies) {
+        Set<String> companyName = companies.stream()
+                .map(p -> p.getName()).collect(Collectors.toSet());
+
+        Map<String, Integer> map = companyName.stream().collect(Collectors.toMap(
+                m -> m,
+                m -> companies.stream()
+                        .filter(p -> p.getName().equals(m))
+                        .mapToInt(c -> c.getEmployees()).sum()));
+
+        System.out.println(map);
+    }
+
+    private static void exercise8(List<Company> companies) {
+        List<Company> companyDetroitKijev = companies.stream()
+                .filter(p -> p.getCityHeadquarters().equalsIgnoreCase("Detroit") ||
+                        p.getCityHeadquarters().equalsIgnoreCase("Kijev"))
+                .collect(Collectors.toList());
+        for (Company company : companyDetroitKijev) {
+            company.setEmployees(company.getEmployees() + 1);
+        }
+
+        for (Company company : companyDetroitKijev) {
+            System.out.println(company);
+        }
+    }
+
+    public static Company exercise7(List<Company> companies) {
+        List<Company> allComapniesList = companies.stream()
+                .filter(p -> !p.getCityHeadquarters().equals("London") && !p.getCityHeadquarters().equals("Kijev") &&
+                        !p.getCityHeadquarters().equals("Detroit"))
+                .sorted(Comparator.comparingInt(o -> o.getPurchaseList().size()))
+                .collect(Collectors.toList());
+        Optional<Company> minProducts = allComapniesList.stream()
+                .findFirst();
+        System.out.println(minProducts);
+
+        return minProducts.get();
     }
 
     public static List<Company> exercise6(List<Company> companies) {
         List<Company> minNameList = new ArrayList<>();
-        OptionalInt minName=companies.stream()
+        OptionalInt minName = companies.stream()
                 .mapToInt(c -> c.getName().length()).min();
-        if (minName.isPresent()){
+        if (minName.isPresent()) {
             Optional<Company> optionalCompany = companies.stream()
                     .filter(c -> c.getName().length() == minName.getAsInt()).findAny();
             minNameList.add(optionalCompany.get());
+
+            System.out.println(minNameList);
+
             return minNameList;
         } else {
             return null;
         }
     }
 
-
-    public static Company exercise7(List<Company> companies){
-        List<Company> listaWszytskichFirm = companies.stream()
-                .filter(p->!p.getCityHeadquarters().equals("London")&&!p.getCityHeadquarters().equals("Kijev")&&
-                        !p.getCityHeadquarters().equals("Detroit"))
-                .sorted(Comparator.comparingInt(o->o.getPurchaseList().size()))
+    public static Company exercise5(List<Company> companies) {
+        List<Company> allComapniesList = companies.stream()
+                .filter(p -> p.getCityHeadquarters().equals("Kijev"))
                 .collect(Collectors.toList());
-        Optional<Company> najmniejProduktow = listaWszytskichFirm.stream()
-                .findFirst();
-        System.out.println(najmniejProduktow);
 
-        return najmniejProduktow.get();
+        OptionalInt employeesMax = allComapniesList.stream()
+                .mapToInt(p -> p.getEmployees()).max();
+
+        Optional<Company> allCompaniesList2 = allComapniesList.stream()
+                .filter(p -> p.getEmployees() == employeesMax.getAsInt())
+                .findFirst();
+
+        if (employeesMax.isPresent()) {
+            System.out.println(allCompaniesList2.get());
+        }
+        return allCompaniesList2.get();
+    }
+
+    public static void exercise4(List<Company> companies) {
+        List<Company> companyGdanskList = companies.stream()
+                .filter(p -> p.getCityHeadquarters().equals("Gdansk"))
+                .sorted(Comparator.comparingInt(o -> o.getPurchaseList().size()))
+                .sorted(Comparator.comparingInt(Company::getEmployees)
+                        .reversed())
+                .collect(Collectors.toList());
+        companyGdanskList.forEach(System.out::println);
+    }
+
+    public static void exercise3(List<Company> companies) {
+        List<Company> companiesList = companies.stream()
+                .filter(p -> p.getCityHeadquarters().equals("London"))
+                .sorted(Comparator.comparingInt(Company::getEmployees))
+                .collect(Collectors.toList());
+        companiesList.forEach(System.out::println);
+    }
+
+    public static void exercise2(List<Company> companies) {
+        companies.stream()
+                .filter(p -> p.getCityHeadquarters().equals("Detroit"))
+                .forEach(p -> System.out.println(p));
+    }
+
+    public static void exercise1(List<Company> companies) {
+        companies.stream()
+                .forEach(p -> System.out.println(p));
     }
 
 }
